@@ -1,4 +1,19 @@
 ---
+
+- name: 'Create Docker data directory'
+  file:
+    path: "{{ docker_data_dir }}"
+    state: directory
+
+- name: Install required packages
+  apt:
+    name: python3-pip
+    state: present
+
+- name: Install Docker Module for Python
+  pip:
+    name: docker
+
 - name: 'Set up Docker Swarm'
   include_tasks: 'docker_swarm.yml'
 
