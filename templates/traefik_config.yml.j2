@@ -1,4 +1,13 @@
 http:
+  routers:
+    router0:
+      rule: "Host(`{{ traefik_domain }}`)"
+      tls:
+        certResolver: "http"
+        domains:
+          - main: "{{ traefik_domain }}"
+            sans: "*.{{ traefik_domain }}"
+
   middlewares:
     https-redirect:
       redirectScheme:
