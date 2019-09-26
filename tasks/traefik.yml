@@ -10,47 +10,70 @@
     state: 'directory'
   loop:
     - 'traefik_data'
+    - 'traefik_data/letsencrypt'
   loop_control:
     loop_var: 'dir'
 
-- block:
-    - name: 'Generate SSL key'
-      openssl_privatekey:
-        path: "{{ docker_data_dir }}/traefik_data/traefik.key"
+- name: 'Create file for acme tls data'
+  file:
+    path: "{{ docker_data_dir }}/traefik_data/letsencrypt/acme.json"
+    mode: '0644'
+    state: touch
+    modification_time: preserve
+    access_time: preserve
 
-    - name: 'Generate SSL certificate request'
-      openssl_csr:
-        path: "{{ docker_data_dir }}/traefik_data/traefik.csr"
-        privatekey_path: "{{ docker_data_dir }}/traefik_data/traefik.key"
-        common_name: "*.{{ traefik_domain }}"
 
-    - name: 'Self-sign SSL certificate'
-      openssl_certificate:
-        path: "{{ docker_data_dir }}/traefik_data/traefik.crt"
-        privatekey_path: "{{ docker_data_dir }}/traefik_data/traefik.key"
-        csr_path: "{{ docker_data_dir }}/traefik_data/traefik.csr"
-        provider: selfsigned
-  when: traefik_selfsign
+- name: 'Copy traefik config into place'
+  template:
+    src: 'templates/traefik.yml.j2'
+    dest: '{{ docker_data_dir }}/traefik_data/traefik.yml'
+    mode: '0644'
+
+- name: 'Copy traefik middlewares config into place'
+  template:
+    src: 'templates/traefik_config.yml.j2'
+    dest: '{{ docker_data_dir }}/traefik_data/config.yml'
+    mode: '0644'
 
 - name: 'Deploy Traefik'
   docker_swarm_service:
     name: 'traefik'
-    image: 'traefik'
-    command:
-      - '/traefik'
-      - '--docker'
-      - '--docker.swarmMode'
-      - "--docker.domain={{ traefik_domain }}"
-      - '--docker.watch'
-      - '--defaultentrypoints=http,https'
-      - '--entryPoints=Name:https Address::443 TLS:/certs/traefik.crt,/certs/traefik.key'
-      - '--entryPoints=Name:http Address::80 Redirect.EntryPoint:https'
+    image: 'traefik:latest'
+    env:
+      # These should all be passed in as variables, including keys
+      # to support different dns providers
+      GANDIV5_API_KEY: "{{ acme_api_key_gandi }}"
+      GANDIV5_HTTP_TIMEOUT: '30'
+      GANDIV5_POLLING_INTERVAL: '90'
+      GANDIV5_PROPAGATION_TIMEOUT: '180'
+    labels:
+      traefik.http.routers.traefik.entrypoints: 'http'
+      traefik.http.routers.traefik.rule: "Host('{{ traefik_domain }}')"
+      #traefik.http.middlewares.traefik-auth.basicauth.users: USER:PASSWORD
+      traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme: 'https'
+      traefik.http.routers.traefik.middlewares: 'traefik-https-redirect'
+      traefik.http.routers.traefik-secure.entrypoints: 'https'
+      traefik.http.routers.traefik-secure.rule: "Host('{{ traefik_domain }}')"
+      #traefik.http.routers.traefik-secure.middlewares: 'traefik-auth'
+      traefik.http.routers.traefik-secure.tls: 'true'
+      traefik.http.routers.traefik-secure.tls.certresolver: 'http'
+      traefik.http.routers.traefik-secure.service: 'api@internal'
+      traefik.http.services.traefik.loadbalancer.server.port: '8080'
     mounts:
       - source: '/var/run/docker.sock'
         target: '/var/run/docker.sock'
         type: 'bind'
-      - source: '{{ docker_data_dir }}/traefik_data'
-        target: '/certs'
+        readonly: yes
+      - source: '{{ docker_data_dir }}/traefik_data/traefik.yml'
+        target: '/traefik.yml'
+        type: 'bind'
+        readonly: yes
+      - source: '{{ docker_data_dir }}/traefik_data/config.yml'
+        target: '/config.yml'
+        type: 'bind'
+        readonly: yes
+      - source: '{{ docker_data_dir }}/traefik_data/letsencrypt/acme.json'
+        target: '/acme.json'
         type: 'bind'
     networks:
       - 'traefik_backend'
