@@ -4,8 +4,8 @@
     state: 'present'
 
 - name: 'Inspect swarm'
-  docker_swarm:
-    state: 'inspect'
+  docker_swarm_info:
+    nodes: yes
   register: 'swarm_info'
 
 - name: 'Set Swarm master IP fact'
