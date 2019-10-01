@@ -44,12 +44,12 @@
     labels:
       traefik.enable: 'true'
       traefik.http.routers.traefik.entrypoints: 'http'
-      traefik.http.routers.traefik.rule: "Host(`api.{{ traefik_domain }}`)"
+      traefik.http.routers.traefik.rule: "Host(`{{ traefik_domain }}`)"
       traefik.http.middlewares.traefik-auth.basicauth.users: "{{ traefik_auth_credentials }}"
       traefik.http.middlewares.https-redirect.redirectscheme.scheme: 'https'
       traefik.http.routers.traefik.middlewares: 'https-redirect'
       traefik.http.routers.traefik-secure.entrypoints: 'https'
-      traefik.http.routers.traefik-secure.rule: "Host(`api.{{ traefik_domain }}`)"
+      traefik.http.routers.traefik-secure.rule: "Host(`{{ traefik_domain }}`)"
       traefik.http.routers.traefik-secure.middlewares: 'traefik-auth'
       traefik.http.routers.traefik-secure.tls: 'true'
       traefik.http.routers.traefik-secure.tls.certresolver: 'letsencrypt'

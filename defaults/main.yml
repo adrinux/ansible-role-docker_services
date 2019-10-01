@@ -14,6 +14,8 @@ restart_condition: 'any'
 
 traefik_domain: 'dckr.example.com'              # Subdomain to put all services under
 traefik_selfsign: true                          # Selfsign the used SSL certificate
+# Generate an encrypted password with "htpasswd -nbB admin PASSWORD"
+traefik_auth_credentials:                       # basic auth user/pass
 
 portainer_app_name: 'portainer'                 # Service name for Portainer (portainer.dckr.example.com)
 
