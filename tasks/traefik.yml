@@ -33,14 +33,14 @@
 - name: 'Deploy Traefik'
   docker_swarm_service:
     name: 'traefik'
-    image: 'traefik:latest'
+    image: 'traefik:v2.0'
     env:
       # These should all be passed in as variables, including keys
       # to support different dns providers
       GANDIV5_API_KEY: "{{ acme_api_key_gandi }}"
-      GANDIV5_HTTP_TIMEOUT: '30'
-      GANDIV5_POLLING_INTERVAL: '90'
-      GANDIV5_PROPAGATION_TIMEOUT: '180'
+      GANDIV5_HTTP_TIMEOUT: '60'
+      GANDIV5_POLLING_INTERVAL: '180'
+      GANDIV5_PROPAGATION_TIMEOUT: '360'
     labels:
       traefik.enable: 'true'
       traefik.http.routers.traefik.entrypoints: 'http'
