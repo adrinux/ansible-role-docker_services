@@ -4,6 +4,7 @@
 [api]
   dashboard = true
   debug = true
+  insecure = false
 
 [entryPoints]
   [entryPoints.http]
@@ -18,8 +19,8 @@
     swarmMode = true
     useBindPortIp = true
     watch = true
-  [providers.file]
-    filename = "/config.yml"
+  {# [providers.file]
+    filename = "/config.toml" #}
 
 [certificatesResolvers]
   [certificatesResolvers.letsencrypt]
@@ -29,7 +30,7 @@
       # Uncomment to use Let's Encrypt's staging server, leave commented for prod
       caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
       [certificatesResolvers.letsencrypt.acme.dnsChallenge]
-        provider= "{{ acme_dns_provider }}""
+        provider= "{{ acme_dns_provider }}"
 
         # By default, the provider will verify the TXT DNS challenge record before letting ACME verify.
         # If delayBeforeCheck is greater than zero, this check is delayed for the configured duration in seconds.
@@ -41,3 +42,6 @@
         # Default: empty
         #
         resolvers = ["1.1.1.1:53", "8.8.8.8:53"]
+
+[log]
+  level = "debug"

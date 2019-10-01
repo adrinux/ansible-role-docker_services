@@ -17,7 +17,7 @@
 - name: 'Create file for acme tls data'
   file:
     path: "{{ docker_data_dir }}/traefik_data/letsencrypt/acme.json"
-    mode: '0644'
+    mode: '0600'
     state: touch
     modification_time: preserve
     access_time: preserve
@@ -25,15 +25,10 @@
 
 - name: 'Copy traefik config into place'
   template:
-    src: 'templates/traefik.yml.j2'
-    dest: '{{ docker_data_dir }}/traefik_data/traefik.yml'
+    src: 'templates/traefik.toml.j2'
+    dest: '{{ docker_data_dir }}/traefik_data/traefik.toml'
     mode: '0644'
 
-- name: 'Copy traefik middlewares config into place'
-  template:
-    src: 'templates/traefik_config.yml.j2'
-    dest: '{{ docker_data_dir }}/traefik_data/config.yml'
-    mode: '0644'
 
 - name: 'Deploy Traefik'
   docker_swarm_service:
@@ -47,16 +42,19 @@
       GANDIV5_POLLING_INTERVAL: '90'
       GANDIV5_PROPAGATION_TIMEOUT: '180'
     labels:
+      traefik.enable: 'true'
       traefik.http.routers.traefik.entrypoints: 'http'
-      traefik.http.routers.traefik.rule: "Host('{{ traefik_domain }}')"
-      #traefik.http.middlewares.traefik-auth.basicauth.users: USER:PASSWORD
-      traefik.http.middlewares.traefik-https-redirect.redirectscheme.scheme: 'https'
-      traefik.http.routers.traefik.middlewares: 'traefik-https-redirect'
+      traefik.http.routers.traefik.rule: "Host(`api.{{ traefik_domain }}`)"
+      traefik.http.middlewares.traefik-auth.basicauth.users: "{{ traefik_auth_credentials }}"
+      traefik.http.middlewares.https-redirect.redirectscheme.scheme: 'https'
+      traefik.http.routers.traefik.middlewares: 'https-redirect'
       traefik.http.routers.traefik-secure.entrypoints: 'https'
-      traefik.http.routers.traefik-secure.rule: "Host('{{ traefik_domain }}')"
-      #traefik.http.routers.traefik-secure.middlewares: 'traefik-auth'
+      traefik.http.routers.traefik-secure.rule: "Host(`api.{{ traefik_domain }}`)"
+      traefik.http.routers.traefik-secure.middlewares: 'traefik-auth'
       traefik.http.routers.traefik-secure.tls: 'true'
-      traefik.http.routers.traefik-secure.tls.certresolver: 'http'
+      traefik.http.routers.traefik-secure.tls.certresolver: 'letsencrypt'
+      traefik.http.routers.traefik-secure.tls.domains[0].main: "{{ traefik_domain }}"
+      traefik.http.routers.traefik-secure.tls.domains[0].sans: "*.{{ traefik_domain }}"
       traefik.http.routers.traefik-secure.service: 'api@internal'
       traefik.http.services.traefik.loadbalancer.server.port: '8080'
     mounts:
@@ -64,12 +62,8 @@
         target: '/var/run/docker.sock'
         type: 'bind'
         readonly: yes
-      - source: '{{ docker_data_dir }}/traefik_data/traefik.yml'
-        target: '/traefik.yml'
-        type: 'bind'
-        readonly: yes
-      - source: '{{ docker_data_dir }}/traefik_data/config.yml'
-        target: '/config.yml'
+      - source: '{{ docker_data_dir }}/traefik_data/traefik.toml'
+        target: '/traefik.toml'
         type: 'bind'
         readonly: yes
       - source: '{{ docker_data_dir }}/traefik_data/letsencrypt/acme.json'
