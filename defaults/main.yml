@@ -1,10 +1,10 @@
 ---
 enabled_services:
-  - 'janitor'
-  - 'gitea'
-  - 'drone'
-  - 'registry'
-  - 'awx'
+  #- 'janitor'
+  #- 'gitea'
+  #- 'drone'
+  #- 'registry'
+  #- 'awx'
 
 docker_edition: 'ce'
 
