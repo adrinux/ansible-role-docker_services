@@ -20,24 +20,7 @@
     useBindPortIp = true
     watch = true
 
-[certificatesResolvers]
-  [certificatesResolvers.letsencrypt]
-    [certificatesResolvers.letsencrypt.acme]
-      email = "{{ acme_email }}"
-      storage = "acme.json"
-      # Uncomment to use Let's Encrypt's staging server, leave commented for prod
-      #caServer = "https://acme-staging-v02.api.letsencrypt.org/directory"
-      [certificatesResolvers.letsencrypt.acme.dnsChallenge]
-        provider= "{{ acme_dns_provider }}"
-
-        # By default, the provider will verify the TXT DNS challenge record before letting ACME verify.
-        # If delayBeforeCheck is greater than zero, this check is delayed for the configured duration in seconds.
-        delayBeforeCheck = 0
-
-        # Use following DNS servers to resolve the FQDN authority.
-        #
-        # Optional
-        # Default: empty
-        #
-        resolvers = ["1.1.1.1:53", "8.8.8.8:53"]
+[[tls.certificates]]
+  certFile = "{{ docker_data_dir }}/certbot/yan.perlucida.uk/cert.pem"
+  keyFile = "{{ docker_data_dir }}/certbot/yan.perlucida.uk/privkey.pem"
 
