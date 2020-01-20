@@ -31,6 +31,7 @@
       traefik.http.routers.traefik.rule: "Host(`{{ traefik_domain }}`)"
       traefik.http.middlewares.traefik-auth.basicauth.users: "{{ traefik_auth_credentials }}"
       traefik.http.middlewares.https-redirect.redirectscheme.scheme: 'https'
+      traefik.http.middlewares.redirect-https.redirectscheme.permanent: 'true'
       traefik.http.routers.traefik.middlewares: 'https-redirect'
       traefik.http.routers.traefik-secure.entrypoints: 'https'
       traefik.http.routers.traefik-secure.rule: "Host(`{{ traefik_domain }}`)"
@@ -43,12 +44,12 @@
         target: '/traefik.toml'
         type: 'bind'
         readonly: yes
-      - source: '{{ docker_data_dir }}/certbot/{{ traefik_domain }}/cert.pem'
+      - source: '{{ docker_data_dir }}/certbot/cert.pem'
         target: '/cert.pem'
         type: 'bind'
         readonly: yes
-      - source: '{{ docker_data_dir }}/certbot/{{ traefik_domain }}/privkey.pem'
-        target: '/privkey.pem'
+      - source: '{{ docker_data_dir }}/certbot/key.pem'
+        target: '/key.pem'
         type: 'bind'
         readonly: yes
     networks:
